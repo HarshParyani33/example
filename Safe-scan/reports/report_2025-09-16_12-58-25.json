@@ -1,0 +1,9 @@
+{
+    "url": "http://testphp.vulnweb.com/?redirect=",
+    "vuln_type": "redirect",
+    "result": {
+        "vulnerable": false,
+        "notes": "No unsafe redirect detected"
+    },
+    "timestamp": "2025-09-16_12-58-25"
+}

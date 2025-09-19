@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>SafeScan Web Report</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #007BFF; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SafeScan Web Report</h1>
+        <p><strong>URL:</strong> {{ url }}</p>
+        <p><strong>Vulnerability Type:</strong> {{ vuln_type }}</p>
+        <p><strong>Timestamp:</strong> {{ timestamp }}</p>
+
+        <h2>Results:</h2>
+        {% if result %}
+            {% if result.vulnerable is defined %}
+                <p><strong>Vulnerable:</strong> {{ result.vulnerable }}</p>
+                <p><strong>Notes:</strong> {{ result.notes }}</p>
+            {% elif result.missing_headers is defined %}
+                <p><strong>Missing Headers:</strong></p>
+                <ul>
+                    {% for header in result.missing_headers %}
+                        <li>{{ header }}</li>
+                    {% endfor %}
+                </ul>
+                <h3>All Headers:</h3>
+                <pre>{{ result.all_headers }}</pre>
+            {% else %}
+                <pre>{{ result | tojson(indent=4) }}</pre>
+            {% endif %}
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

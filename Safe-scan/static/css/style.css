@@ -1,0 +1,43 @@
+body {
+    min-height: 100vh;
+    background: #FDF7E9;
+}
+.glass {
+    background: #ffffffcc;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+}
+.result-card {
+    border-left: 6px solid transparent;
+}
+.result-card.ok {
+    border-left-color: #198754;
+}
+.result-card.bad {
+    border-left-color: #dc3545;
+}
+.badge-sev {
+    font-size: 0.75rem;
+}
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+.overlay .spinner-border {
+    width: 3rem; height: 3rem;
+}
+pre {
+    background: #212529;
+    color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
