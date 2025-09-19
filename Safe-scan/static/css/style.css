@@ -1,43 +1,99 @@
+:root {
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --glass-bg: #ffffff;
+    --glass-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    --btn-bg: #e9ecef;
+    --btn-text: #212529;
+    --btn-selected-bg: #198754;
+    --btn-selected-text: #ffffff;
+    --border-color: #dee2e6;
+}
+
+body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #f8f9fa;
+    --glass-bg: #1e1e1e;
+    --glass-shadow: 0 10px 30px rgba(255,255,255,0.1);
+    --btn-bg: #343a40;
+    --btn-text: #f8f9fa;
+    --btn-selected-bg: #28a745;
+    --btn-selected-text: #ffffff;
+    --border-color: #495057;
+}
+
 body {
     min-height: 100vh;
-    background: #FDF7E9;
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
 }
+
 .glass {
-    background: #ffffffcc;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
     border-radius: 12px;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
 }
+
 .result-card {
     border-left: 6px solid transparent;
 }
+
 .result-card.ok {
     border-left-color: #198754;
 }
+
 .result-card.bad {
     border-left-color: #dc3545;
 }
+
 .badge-sev {
     font-size: 0.75rem;
 }
-.overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1050;
-}
-.overlay .spinner-border {
-    width: 3rem; height: 3rem;
-}
+
 pre {
     background: #212529;
     color: #f8f9fa;
     padding: 15px;
     border-radius: 5px;
     overflow-x: auto;
+}
+
+.scan-option-btn {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid var(--border-color);
+}
+
+.scan-option-btn.selected {
+    background-color: var(--btn-selected-bg);
+    color: var(--btn-selected-text);
+    border-color: var(--btn-selected-bg);
+}
+
+.tab-content {
+    background-color: var(--glass-bg);
+    border-color: var(--border-color) !important;
+}
+
+.card {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2.5rem;
+    }
+
+    .glass {
+        padding: 1.5rem;
+    }
+}
+body.dark-mode .text-muted {
+    color: #adb5bd !important; /* A light, muted color for dark mode */
 }

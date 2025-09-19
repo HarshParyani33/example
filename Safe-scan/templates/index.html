@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SafeScan Web</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -12,38 +13,43 @@ pre { max-height: 420px; overflow: auto; }
 </style>
 </head>
 <body>
-<div class="overlay" id="loadingOverlay"><div class="spinner-border text-light" role="status"><span class="visually-hidden">Loading...</span></div></div>
 <div class="container mt-5 glass p-4">
-    <h1 class="text-center mb-4">SafeScan Web Security Scanner</h1>
+    <div class="d-flex justify-content-end mb-2">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="theme-toggle">
+            <label class="form-check-label" for="theme-toggle"><i class="fas fa-moon"></i></label>
+        </div>
+    </div>
+    <div class="text-center mb-4">
+        <h1 class="display-4">Find Web Vulnerabilities in Seconds.</h1>
+        <p class="lead">Safe-scan is a free, open-source tool to check your website for common security issues like SQL Injection, XSS, and more.</p>
+    </div>
 
-    <form method="POST" class="mb-4" onsubmit="document.getElementById('loadingOverlay').style.display='flex'">
+    <form method="POST" class="mb-4">
         <input type="text" name="url" class="form-control mb-3" placeholder="Enter URL (e.g., https://example.com)" required>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" name="xss" checked>
-            <label class="form-check-label">XSS</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" name="redirect" checked>
-            <label class="form-check-label">Open Redirect</label>
-        </div>
-        <div class="form-check form-check-inline mb-3">
-            <input class="form-check-input" type="checkbox" name="headers" checked>
-            <label class="form-check-label">HTTP Headers</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" name="sqli" checked>
-            <label class="form-check-label">SQL Injection (error-based)</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="checkbox" name="cors" checked>
-            <label class="form-check-label">CORS Misconfig</label>
-        </div>
-        <div class="form-check form-check-inline mb-3">
-            <input class="form-check-input" type="checkbox" name="cookies" checked>
-            <label class="form-check-label">Cookie Flags</label>
+        <div class="d-flex flex-wrap gap-2 mb-3 justify-content-center">
+            <button type="button" class="btn scan-option-btn selected" data-check="xss">XSS</button>
+            <input type="hidden" name="xss" value="true">
+            <button type="button" class="btn scan-option-btn selected" data-check="redirect">Open Redirect</button>
+            <input type="hidden" name="redirect" value="true">
+            <button type="button" class="btn scan-option-btn selected" data-check="headers">HTTP Headers</button>
+            <input type="hidden" name="headers" value="true">
+            <button type="button" class="btn scan-option-btn selected" data-check="sqli">SQL Injection</button>
+            <input type="hidden" name="sqli" value="true">
+            <button type="button" class="btn scan-option-btn selected" data-check="cors">CORS Misconfig</button>
+            <input type="hidden" name="cors" value="true">
+            <button type="button" class="btn scan-option-btn selected" data-check="cookies">Cookie Flags</button>
+            <input type="hidden" name="cookies" value="true">
         </div>
         <button class="btn btn-warning w-100 fw-bold">Run Scan</button>
     </form>
+
+    <div id="scan-progress" class="mb-4" style="display: none;">
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+        </div>
+        <div id="live-log" class="mt-2 text-muted text-center"></div>
+    </div>
 
     {% if result %}
     <h3 class="mt-4">Scan Summary:</h3>
@@ -59,7 +65,7 @@ pre { max-height: 420px; overflow: auto; }
         {% endfor %}
     </ul>
 
-    <div class="tab-content p-3 border bg-light" id="resultTabsContent">
+    <div class="tab-content p-3 border" id="resultTabsContent">
         {% for key, data in result.items() %}
         <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="{{key}}" role="tabpanel">
             {% if key == 'headers' %}
@@ -143,127 +149,6 @@ pre { max-height: 420px; overflow: auto; }
 {% if result %}
 <script id="result-data" type="application/json">{{ result | tojson | safe }}</script>
 {% endif %}
-<script>
-const summaryData = JSON.parse(document.getElementById('summary-data').textContent || '{}');
-const canvasEl = document.getElementById('summaryChart');
-const ctx = canvasEl ? canvasEl.getContext('2d') : null;
-const totalFindings = (summaryData.critical || 0) + (summaryData.high || 0) + (summaryData.medium || 0) + (summaryData.low || 0);
-const resultData = (document.getElementById('result-data') && JSON.parse(document.getElementById('result-data').textContent || '{}')) || {};
-
-function buildSeverityContrib(resultObj) {
-    const contrib = { critical: [], high: [], medium: [], low: [] };
-    if (!resultObj || typeof resultObj !== 'object') return contrib;
-    // XSS -> critical
-    if (resultObj.xss && resultObj.xss.vulnerable) {
-        const n = (resultObj.xss.details || []).length || 1;
-        contrib.critical.push(`XSS: ${n}`);
-    }
-    // SQLi -> high
-    if (resultObj.sqli && resultObj.sqli.vulnerable) {
-        const n = (resultObj.sqli.details || []).length || 1;
-        contrib.high.push(`SQLi: ${n}`);
-    }
-    // Open Redirect -> high
-    if (resultObj.redirect && resultObj.redirect.vulnerable) {
-        const n = (resultObj.redirect.details || []).length || 1;
-        contrib.high.push(`Open Redirect: ${n}`);
-    }
-    // CORS -> medium
-    if (resultObj.cors && resultObj.cors.vulnerable) {
-        const n = (resultObj.cors.details || []).length || 1;
-        contrib.medium.push(`CORS: ${n}`);
-    }
-    // Cookies -> low
-    if (resultObj.cookies && resultObj.cookies.vulnerable) {
-        const n = (resultObj.cookies.details || []).length || 1;
-        contrib.low.push(`Cookies: ${n}`);
-    }
-    // Headers -> per missing header severity
-    if (resultObj.headers && resultObj.headers.missing_headers) {
-        const missing = resultObj.headers.missing_headers || [];
-        const buckets = { critical: [], high: [], medium: [], low: [] };
-        missing.forEach(function(h){
-            const sev = (h.severity || '').toLowerCase();
-            if (sev && buckets[sev] !== undefined) buckets[sev].push(h.header || 'Header');
-        });
-        Object.keys(buckets).forEach(function(s){
-            if (buckets[s].length) {
-                // List up to 3 names to keep tooltip concise
-                const names = buckets[s].slice(0,3).join(', ');
-                const more = buckets[s].length > 3 ? ` +${buckets[s].length - 3} more` : '';
-                contrib[s].push(`Headers: ${names}${more}`);
-            }
-        });
-    }
-    return contrib;
-}
-
-const severityContrib = buildSeverityContrib(resultData);
-
-if (ctx) {
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Critical', 'High', 'Medium', 'Low'],
-            datasets: [{
-                data: [
-                    summaryData.critical || 0,
-                    summaryData.high || 0,
-                    summaryData.medium || 0,
-                    summaryData.low || 0
-                ],
-                backgroundColor: ['#dc3545','#fd7e14','#ffc107','#198754'],
-            }]
-        },
-        options: {
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Findings by severity' + (totalFindings ? ` (Total: ${totalFindings})` : '')
-                },
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        generateLabels: function(chart) {
-                            const data = chart.data;
-                            if (!data.labels || !data.labels.length) return [];
-                            const values = data.datasets[0].data;
-                            const tot = values.reduce(function(a, b){ return a + b; }, 0);
-                            const meta = chart.getDatasetMeta(0);
-                            return data.labels.map(function(label, i){
-                                const v = values[i] || 0;
-                                const pct = tot ? ((v / tot) * 100).toFixed(1) : '0.0';
-                                const style = meta.controller.getStyle(i);
-                                return {
-                                    text: label + ': ' + v + ' (' + pct + '%)',
-                                    fillStyle: style.backgroundColor,
-                                    strokeStyle: style.borderColor,
-                                    lineWidth: style.borderWidth,
-                                    hidden: isNaN(values[i]) || meta.data[i].hidden,
-                                    index: i
-                                };
-                            });
-                        }
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const v = context.parsed;
-                            const tot = totalFindings || 0;
-                            const pct = tot ? ((v / tot) * 100).toFixed(1) : '0.0';
-                            const sev = (context.label || '').toLowerCase();
-                            const parts = severityContrib[sev] && severityContrib[sev].length ? ' — from ' + severityContrib[sev].join('; ') : '';
-                            return context.label + ': ' + v + ' (' + pct + '%)' + parts;
-                        }
-                    }
-                }
-            },
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-}
-</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
