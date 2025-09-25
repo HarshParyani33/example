@@ -1,39 +1,33 @@
 from flask import Flask, render_template, request
-import requests
-from bs4 import BeautifulSoup
-import os
+# Import the main scanning function from your scanner logic
+from scanner.scanner_logic import run_scan
 
-app = Flask(__name__)
-
-# Function to check for security vulnerabilities
-def check_vulnerabilities(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()  # Raise an exception for bad status codes
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # Example vulnerability checks (you can add more)
-        vulnerabilities = []
-        if soup.find('input', {'type': 'password'}):
-            vulnerabilities.append('Password field found - ensure HTTPS is used.')
-        if not response.headers.get('Content-Security-Policy'):
-            vulnerabilities.append('Content Security Policy (CSP) header not set.')
-        if not response.headers.get('X-Frame-Options'):
-            vulnerabilities.append('X-Frame-Options header not set (clickjacking vulnerability).')
-        
-        return vulnerabilities
-        
-    except requests.exceptions.RequestException as e:
-        return [f"Error: {e}"]
+# Your Flask app is now aware of the correct template and static file paths
+app = Flask(__name__, template_folder='templates', static_folder='static')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        url = request.form['url']
-        vulnerabilities = check_vulnerabilities(url)
-        return render_template('index.html', vulnerabilities=vulnerabilities, url=url)
-    return render_template('index.html', vulnerabilities=None, url=None)
+        url_to_scan = request.form.get('url')
+        # Create a dictionary of the checks selected in the form
+        checks_to_run = {
+            'xss': request.form.get('xss'),
+            'redirect': request.form.get('redirect'),
+            'headers': request.form.get('headers'),
+            'sqli': request.form.get('sqli'),
+            'cors': request.form.get('cors'),
+            'cookies': request.form.get('cookies'),
+        }
+        
+        # Run the scan using your logic
+        result, summary = run_scan(url_to_scan, checks_to_run)
+        
+        # Render the template with the results
+        return render_template('index.html', result=result, summary=summary)
+        
+    # For a GET request, just show the initial page
+    return render_template('index.html', result=None, summary=None)
 
-# IMPORTANT: Do NOT include the following lines
-# if __name__ == '__main__':
-#     app.run(debug=True)
+# NOTE: The app.run() part is not needed for Vercel and should not be included.
+
+# NOTE: The app.run() part is not needed for Vercel and should not be included.
