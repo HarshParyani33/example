@@ -1,0 +1,14 @@
+{
+  "builds": [
+    {
+      "src": "Safe-scan/app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "Safe-scan/app.py"
+    }
+  ]
+}
