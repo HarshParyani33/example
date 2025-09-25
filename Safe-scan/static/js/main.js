@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const summaryData = JSON.parse(document.getElementById('summary-data').textContent || '{}');
     const canvasEl = document.getElementById('summaryChart');
     const ctx = canvasEl ? canvasEl.getContext('2d') : null;
-    const totalFindings = (summaryData.critical || 0) + (summaryData.high || 0) + (summaryData.medium || 0) + (summaryData.low || 0);
+    const totalFindings = summaryData ? (summaryData.critical || 0) + (summaryData.high || 0) + (summaryData.medium || 0) + (summaryData.low || 0) : 0;
     const resultData = (document.getElementById('result-data') && JSON.parse(document.getElementById('result-data').textContent || '{}')) || {};
     const themeToggle = document.getElementById('theme-toggle');
     const themeIcon = document.querySelector('label[for="theme-toggle"] i');
