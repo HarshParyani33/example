@@ -1,5 +1,12 @@
+import os
+import sys
 from flask import Flask, render_template, request
-# Import the main scanning function from your scanner logic
+
+# Add the project directory to the Python path
+# This is the crucial fix for the ModuleNotFoundError
+sys.path.insert(0, os.path.dirname(__file__))
+
+# Now the import will work correctly
 from scanner.scanner_logic import run_scan
 
 # Your Flask app is now aware of the correct template and static file paths
@@ -27,7 +34,3 @@ def index():
         
     # For a GET request, just show the initial page
     return render_template('index.html', result=None, summary=None)
-
-# NOTE: The app.run() part is not needed for Vercel and should not be included.
-
-# NOTE: The app.run() part is not needed for Vercel and should not be included.
